@@ -47,5 +47,41 @@
 
 وارد محیط SSH سرور خود شوید و دستور زیر را اجرا کنید:
 
-```bash
-bash <(curl -Ls [https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh](https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh))
+    bash <(curl -Ls [https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh](https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh))
+
+### مراحل پس از اجرای دستور:
+1. **توکن ربات تلگرام** (`Bot Token`) را وارد کنید.
+2. **آیدی عددی ادمین** (`Admin Numeric ID`) را وارد کنید.
+3. در صورت تمایل **دامنه/ساب‌دامنه** متصل به سرور را وارد کنید (یا برای استفاده از IP سرور Enter بزنید).
+4. پروتکل (**UDP** یا **TCP**) و **پورت** مورد نظر (پیش‌فرض `1194`) را انتخاب کنید.
+5. پس از اتمام نصب، وارد ربات تلگرام خود شوید و دستور `/start` یا `/menu` را ارسال کنید.
+
+---
+
+## 🛠 منوی مدیریت سریع روی سرور
+
+پس از نصب اولیه، هر زمان که دوباره دستور نصب را روی سرور اجرا کنید، **منوی مدیریت سریع** برای شما باز می‌شود که شامل گزینه‌های زیر است:
+* تغییر توکن ربات و آیدی عددی ادمین
+* ری‌استارت کردن سرویس ربات تلگرام
+* ری‌استارت کردن سرویس OpenVPN
+* حذف کامل OpenVPN و ربات از روی سرور
+
+---
+
+## 📂 مسیر فایل‌های مهم روی سرور
+
+| بخش | مسیر فایل |
+| :--- | :--- |
+| **فایل کانفیگ مشتریان** | `/opt/openvpn-bot/Universal-Client.ovpn` |
+| **تنظیمات توکن و ادمین** | `/opt/openvpn-bot/config.py` |
+| **فایل کانفیگ سرور OpenVPN** | `/etc/openvpn/server/server.conf` |
+| **دیتابیس حجم مصرفی کاربران** | `/etc/openvpn/server/traffic.json` |
+| **فایل محدودیت تعداد کاربر** | `/etc/openvpn/server/user_limits.txt` |
+
+---
+
+## ⚠️ نکات امنیتی
+
+* دسترسی ربات به صورت انحصاری فقط برای **آیدی عددی ادمین** تعریف شده و برای سایر کاربران تلگرام هیچ واکنشی نشان نمی‌دهد.
+* کاربران ساخته‌شده برای VPN فاقد دسترسی Shell (`/usr/sbin/nologin`) هستند و امکان ورود آن‌ها به محیط SSH سرور وجود ندارد.
+* پیشنهاد می‌شود به صورت دوره‌ای از دکمه **«💾 بکاپ‌گیری کامل»** در ربات استفاده کرده و فایل پشتیبان را نزد خود نگه دارید.
