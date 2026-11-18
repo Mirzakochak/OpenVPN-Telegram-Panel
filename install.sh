@@ -21,21 +21,70 @@ else
 	exit 1
 fi
 
+# اگر قبلاً نصب شده باشد، منوی مدیریت سریع باز می‌شود
+if [[ -e /etc/openvpn/server/server.conf ]]; then
+    clear
+    echo "=========================================================="
+    echo "   مدیریت سریع پنل OpenVPN و ربات تلگرام"
+    echo "=========================================================="
+    echo "   1) تغییر توکن ربات و آیدی عددی ادمین"
+    echo "   2) ری‌استارت کردن ربات تلگرام"
+    echo "   3) ری‌استارت کردن سرویس OpenVPN"
+    echo "   4) حذف کامل OpenVPN و ربات"
+    echo "   5) خروج"
+    read -p "انتخاب شما [1-5]: " menu_opt < /dev/tty
+    case "$menu_opt" in
+        1)
+            read -p "توکن جدید ربات تلگرام: " NEW_TOKEN < /dev/tty
+            read -p "آیدی عددی جدید ادمین: " NEW_ADMIN < /dev/tty
+            cat << EOF > /opt/openvpn-bot/config.py
+TOKEN = '$NEW_TOKEN'
+ADMIN_ID = $NEW_ADMIN
+CONFIG_PATH = '/opt/openvpn-bot/Universal-Client.ovpn'
+EOF
+            systemctl restart openvpn-bot.service
+            echo "✅ تنظیمات جدید ذخیره و ربات ری‌استارت شد."
+            ;;
+        2)
+            systemctl restart openvpn-bot.service
+            echo "✅ ربات تلگرام ری‌استارت شد."
+            ;;
+        3)
+            systemctl restart openvpn-server@server.service
+            echo "✅ سرویس OpenVPN ری‌استارت شد."
+            ;;
+        4)
+            read -p "آیا از حذف کامل مطمئن هستید؟ [y/N]: " confirm < /dev/tty
+            if [[ "$confirm" =~ ^[yY]$ ]]; then
+                systemctl disable --now openvpn-bot.service openvpn-server@server.service openvpn-iptables.service
+                apt-get remove --purge -y openvpn
+                rm -rf /etc/openvpn /opt/openvpn-bot /etc/systemd/system/openvpn-bot.service /etc/systemd/system/openvpn-iptables.service
+                systemctl daemon-reload
+                echo "🗑 همه‌چیز به طور کامل حذف شد."
+            fi
+            ;;
+        *)
+            exit 0
+            ;;
+    esac
+    exit 0
+fi
+
 clear
 echo "=========================================================="
 echo "   نصب‌کننده هوشمند OpenVPN + پنل مدیریتی ربات تلگرام   "
 echo "=========================================================="
 echo ""
 
-# دریافت اطلاعات ربات تلگرام در همان ابتدا
-read -p "توکن ربات تلگرام (Bot Token) را وارد کنید: " BOT_TOKEN
+# دریافت اجباری از کیبورد کاربر با استفاده از < /dev/tty
+read -p "1️⃣ توکن ربات تلگرام (Bot Token) را وارد کنید: " BOT_TOKEN < /dev/tty
 while [[ -z "$BOT_TOKEN" ]]; do
-    read -p "توکن نمی‌تواند خالی باشد! لطفاً توکن را وارد کنید: " BOT_TOKEN
+    read -p "❌ توکن نمی‌تواند خالی باشد! لطفاً توکن را وارد کنید: " BOT_TOKEN < /dev/tty
 done
 
-read -p "آیدی عددی ادمین تلگرام (Admin Numeric ID) را وارد کنید: " ADMIN_ID
+read -p "2️⃣ آیدی عددی ادمین تلگرام (Admin Numeric ID) را وارد کنید: " ADMIN_ID < /dev/tty
 while [[ ! "$ADMIN_ID" =~ ^[0-9]+$ ]]; do
-    read -p "آیدی عددی نامعتبر است! فقط عدد وارد کنید: " ADMIN_ID
+    read -p "❌ آیدی عددی نامعتبر است! فقط عدد وارد کنید: " ADMIN_ID < /dev/tty
 done
 
 # تشخیص IP عمومی سرور
@@ -45,21 +94,21 @@ if echo "$ip" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.
 fi
 
 echo ""
-read -p "دامنه یا ساب‌دامنه (برای اتصال) [خالی بگذارید تا از IP سرور ($ip) استفاده شود]: " custom_domain
+read -p "3️⃣ دامنه یا ساب‌دامنه (خالی بگذارید تا از IP سرور [$ip] استفاده شود): " custom_domain < /dev/tty
 [[ -z "$custom_domain" ]] && config_ip="$ip" || config_ip="$custom_domain"
 
 echo ""
-echo "پروتکل اتصال را انتخاب کنید:"
+echo "4️⃣ پروتکل اتصال را انتخاب کنید:"
 echo "   1) UDP (پیشنهادی برای سرعت بالا)"
 echo "   2) TCP (پیشنهادی برای عبور از محدودیت‌ها - مثل پورت 443)"
-read -p "انتخاب [1]: " protocol
+read -p "انتخاب [1]: " protocol < /dev/tty
 [[ "$protocol" == "2" ]] && protocol=tcp || protocol=udp
 
-read -p "پورت OpenVPN [1194]: " port
+read -p "5️⃣ پورت OpenVPN [1194]: " port < /dev/tty
 [[ -z "$port" ]] && port="1194"
 
 echo ""
-echo "در حال نصب پیش‌نیازها و پیکربندی سرور... لطفاً صبر کنید..."
+echo "⏳ در حال نصب پیش‌نیازها و پیکربندی سرور... لطفاً چند لحظه صبر کنید..."
 
 apt-get update -y
 apt-get install -y openvpn openssl ca-certificates wget curl python3 python3-pip python3-venv iptables zip
@@ -123,13 +172,12 @@ EOF
 
 [[ "$protocol" = "udp" ]] && echo "explicit-exit-notify" >> /etc/openvpn/server/server.conf
 
-# ساخت اسکریپت محدودیت اتصال همزمان (پیش‌فرض 2 کاربر)
+# اسکریپت محدودیت اتصال همزمان
 cat << 'EOF' > /etc/openvpn/server/limit.sh
 #!/bin/bash
 LIMIT_FILE="/etc/openvpn/server/user_limits.txt"
 DEFAULT_LIMIT=2
 
-# بررسی محدودیت اختصاصی کاربر در صورت وجود
 USER_LIMIT=$DEFAULT_LIMIT
 if [ -f "$LIMIT_FILE" ]; then
     CUSTOM=$(grep "^$common_name:" "$LIMIT_FILE" | cut -d':' -f2)
@@ -209,15 +257,15 @@ EOF
 
 systemctl enable --now openvpn-server@server.service
 
-# راه‌اندازی محیط مجازی پایتون و دانلود ربات از گیت‌هاب
+# راه‌اندازی محیط مجازی پایتون و دانلود ربات
 python3 -m venv /opt/openvpn-bot/venv
 /opt/openvpn-bot/venv/bin/pip install pyTelegramBotAPI schedule
 
-# ⚠️ لینک گیت‌هاب خود را در خط زیر جایگزین کنید ⚠️
+# ⚠️ نام کاربری و نام مخزن گیت‌هاب خود را در این خط جایگزین کنید ⚠️
 GITHUB_RAW_URL="https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/bot.py"
 wget -qO /opt/openvpn-bot/bot.py "$GITHUB_RAW_URL"
 
-# تزریق توکن و آیدی ادمین به فایل تنظیمات ربات
+# ذخیره توکن و آیدی عددی در config.py
 cat << EOF > /opt/openvpn-bot/config.py
 TOKEN = '$BOT_TOKEN'
 ADMIN_ID = $ADMIN_ID
@@ -247,6 +295,6 @@ systemctl enable --now openvpn-bot.service
 clear
 echo "=========================================================="
 echo "✅ نصب با موفقیت کامل شد!"
-echo "🤖 ربات تلگرام اکنون فعال است. دستور /start را در ربات بزنید."
+echo "🤖 ربات تلگرام فعال شد. هم‌اکنون در ربات دستور /start را بزنید."
 echo "📁 مسیر فایل کانفیگ: $OVPN_PATH"
 echo "=========================================================="
