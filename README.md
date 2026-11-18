@@ -47,7 +47,7 @@
 
 وارد محیط SSH سرور خود شوید و دستور زیر را اجرا کنید:
 
-    bash <(curl -Ls [https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh](https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh))
+    bash <(curl -Ls https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/install.sh)
 
 ### مراحل پس از اجرای دستور:
 1. **توکن ربات تلگرام** (`Bot Token`) را وارد کنید.
