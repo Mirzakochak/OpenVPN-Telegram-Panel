@@ -214,7 +214,7 @@ python3 -m venv /opt/openvpn-bot/venv
 /opt/openvpn-bot/venv/bin/pip install pyTelegramBotAPI schedule
 
 # ⚠️ لینک گیت‌هاب خود را در خط زیر جایگزین کنید ⚠️
-GITHUB_RAW_URL="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/bot.py"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/Mirzakochak/OpenVPN-Telegram-Panel/main/bot.py"
 wget -qO /opt/openvpn-bot/bot.py "$GITHUB_RAW_URL"
 
 # تزریق توکن و آیدی ادمین به فایل تنظیمات ربات
